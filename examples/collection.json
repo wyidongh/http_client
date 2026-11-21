@@ -1,0 +1,50 @@
+{
+  "name": "httpbin demo",
+  "base_url": "{{host}}",
+  "variables": {
+    "host": "https://httpbin.org",
+    "user": "alice"
+  },
+  "headers": {"X-Request-Id": "{{$guid}}"},
+  "auth": {"type": "bearer", "token": "{{token}}"},
+  "timeout": [5, 15],
+  "retry": {"max_retries": 2, "backoff_factor": 0.5},
+  "requests": [
+    {
+      "name": "login",
+      "method": "POST",
+      "url": "/anything/login",
+      "auth": {"type": "none"},
+      "json": {"username": "{{user}}", "password": "secret"},
+      "extract": {"token": "json.json.username"},
+      "expect": {"status": 200, "json": {"json.username": "{{user}}"}, "max_time_ms": 5000}
+    },
+    {
+      "name": "get profile (uses extracted token)",
+      "method": "GET",
+      "url": "/bearer",
+      "expect": {"status": 200, "json": {"token": "{{token}}"}}
+    },
+    {
+      "name": "update profile",
+      "method": "PUT",
+      "url": "/put",
+      "params": {"ts": "{{$timestamp}}"},
+      "json": {"nickname": "Al"},
+      "expect": {"status": 200, "body_contains": "nickname"}
+    },
+    {
+      "name": "basic auth",
+      "method": "GET",
+      "url": "/basic-auth/u/p",
+      "auth": {"type": "basic", "username": "u", "password": "p"},
+      "expect": {"status": 200}
+    },
+    {
+      "name": "download image",
+      "method": "GET",
+      "url": "/image/png",
+      "download": "downloads/"
+    }
+  ]
+}
